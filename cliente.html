@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="style.css" rel="stylesheet">
+    <title>Votação EUA 2024</title>
+</head>
+<body>
+    <h1>Votação EUA 2024</h1>
+    <h1>Seu voto importa</h1>
+    
+    <!-- Formulário para envio de votos -->
+    <div>
+        <label for="nome">Seu Nome:</label>
+        <input type="text" id="nome" placeholder="Seu Nome" required>
+        <br>
+        <div class="opcoes">
+            <div class="opcao">
+                <img src="https://www.cnnbrasil.com.br/wp-content/uploads/sites/12/Reuters_Direct_Media/BrazilOnlineReportWorldNews/tagreuters.com2024binary_LYNXMPEK460HE-FILEDIMAGE.jpg?w=1220&h=674&crop=1" class="foto" alt="Biden">
+                <button onclick="votar('pessoa1')">Biden</button>
+            </div>
+            <div class="opcao">
+                <img src="https://s2-valor.glbimg.com/NBqOG-omUFSgNNyraPzH4ndWcvc=/0x0:2549x1699/888x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_63b422c2caee4269b8b34177e8876b93/internal_photos/bs/2024/3/h/rlG7d4Qa6UpdR77QPcHA/ap24024113302539.jpg" alt="Donald Trump" class="foto">
+                <button onclick="votar('pessoa2')">Donald Trump</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Exibição dos resultados -->
+    <div id="votacao">
+        <h2>Resultados</h2>
+        <div class="resultado-container">
+            <div class="resultado" id="resultadoBiden">
+                <h3>Biden</h3>
+                <p>Votos: <span id="votosBiden">0</span></p>
+                <ul id="nomesBiden"></ul>
+            </div>
+            <div class="resultado" id="resultadoTrump">
+                <h3>Donald Trump</h3>
+                <p>Votos: <span id="votosTrump">0</span></p>
+                <ul id="nomesTrump"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const websocket = new WebSocket("ws://172.20.10.2:8765");
+    
+        websocket.onopen = () => {
+            console.log("Conectado ao WebSocket!");
+        };
+    
+        websocket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            console.log("Mensagem recebida do servidor:", data);
+    
+            // Atualiza os resultados de Biden
+            const votosBiden = data.resultados.pessoa1.votos;
+            const nomesBiden = data.resultados.pessoa1.nomes;
+            document.getElementById('votosBiden').innerText = votosBiden;
+            const listaNomesBiden = document.getElementById('nomesBiden');
+            listaNomesBiden.innerHTML = ''; // Limpa a lista
+            nomesBiden.forEach(nome => {
+                const li = document.createElement('li');
+                li.innerText = nome;
+                listaNomesBiden.appendChild(li);
+            });
+    
+            // Atualiza os resultados de Donald Trump
+            const votosTrump = data.resultados.pessoa2.votos;
+            const nomesTrump = data.resultados.pessoa2.nomes;
+            document.getElementById('votosTrump').innerText = votosTrump;
+            const listaNomesTrump = document.getElementById('nomesTrump');
+            listaNomesTrump.innerHTML = ''; // Limpa a lista
+            nomesTrump.forEach(nome => {
+                const li = document.createElement('li');
+                li.innerText = nome;
+                listaNomesTrump.appendChild(li);
+            });
+        };
+    
+        websocket.onerror = (error) => {
+            console.error("WebSocket Error:", error);
+        };
+    
+        websocket.onclose = () => {
+            console.log("WebSocket fechado.");
+        };
+    
+        function votar(opcao) {
+            const nome = document.getElementById('nome').value;
+            if (nome) {
+                console.log(`Enviando voto de ${nome} para ${opcao}`);
+                websocket.send(JSON.stringify({ acao: 'votar', nome: nome, opcao: opcao }));
+            } else {
+                console.error("Nome deve ser preenchido!");
+            }
+        }
+    </script>
+</body>
+</html>
